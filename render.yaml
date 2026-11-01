@@ -1,0 +1,23 @@
+# Configuración de despliegue para Render (https://render.com)
+# Al conectar el repositorio, Render lee este archivo y crea el servicio.
+services:
+  - type: web
+    name: invitacion-santi-dahiana
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      # Carpeta de datos en el disco persistente (ver 'disk' más abajo)
+      - key: DATA_DIR
+        value: /var/data
+      # Clave para proteger la descarga del listado. Cambiala por la tuya.
+      - key: ADMIN_KEY
+        value: cambia-esta-clave
+    # Disco persistente para que el Excel/CSV no se borre al reiniciar.
+    # NOTA: el disco persistente NO está disponible en el plan free de Render.
+    # Si usás el plan free, comentá el bloque 'disk' y descargá el listado seguido.
+    disk:
+      name: datos
+      mountPath: /var/data
+      sizeGB: 1

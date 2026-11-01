@@ -1,0 +1,17 @@
+{
+  "name": "invitacion-santi-dahiana",
+  "version": "1.0.0",
+  "description": "Invitación de boda de Santiago Ayala y Dahiana Segovia con confirmación de asistencia en Excel",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "xlsx": "^0.18.5"
+  }
+}

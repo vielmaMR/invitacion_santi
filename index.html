@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Santiago & Dahiana · Nos casamos</title>
+  <meta name="description" content="Invitación de boda de Santiago Ayala y Dahiana Segovia · 19 de diciembre de 2026" />
+
+  <!-- Google Fonts: Cormorant Garamond (serif), Great Vibes (script), Nunito (sans) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Great+Vibes&family=Nunito:wght@400;600;700&display=swap"
+    rel="stylesheet" />
+
+  <!-- Font Awesome para iconos -->
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ============ PORTADA / HERO ============ -->
+  <header class="hero" id="inicio">
+    <div class="hero__overlay"></div>
+
+    <!-- Esquinas florales decorativas -->
+    <span class="floral floral--tl" aria-hidden="true">&#10048;</span>
+    <span class="floral floral--br" aria-hidden="true">&#10048;</span>
+
+    <div class="hero__content reveal">
+      <p class="hero__quote">El amor es el comienzo<br />de un gran viaje...</p>
+      <h2 class="hero__kicker">Nos casamos</h2>
+      <h1 class="hero__names">
+        <span>Santiago Ayala</span>
+        <span class="hero__amp">&amp;</span>
+        <span>Dahiana Segovia</span>
+      </h1>
+      <p class="hero__date">19 de diciembre de 2026</p>
+      <div class="hero__rings" aria-hidden="true">
+        <i class="fa-solid fa-ring"></i>
+        <i class="fa-solid fa-ring"></i>
+      </div>
+    </div>
+
+    <a href="#invitacion" class="hero__scroll" aria-label="Desliza hacia abajo">
+      <span>Desliza</span>
+      <i class="fa-solid fa-chevron-down"></i>
+    </a>
+  </header>
+
+  <!-- ============ FRASE ============ -->
+  <section class="phrase reveal">
+    <p>A veces lo que empieza como una locura se convierte en lo mejor de tu vida.</p>
+  </section>
+
+  <!-- ============ INVITACIÓN ============ -->
+  <section class="invite" id="invitacion">
+    <div class="invite__card reveal">
+      <h2 class="section-title">Nos casamos</h2>
+      <p class="invite__lead">
+        Y queremos compartir este momento tan especial
+        con las personas que más queremos.
+      </p>
+      <p class="invite__lead">
+        Por eso, te invitamos a nuestra boda.
+      </p>
+      <div class="invite__couple">
+        <span class="script">Santiago Ayala</span>
+        <span class="invite__and">y</span>
+        <span class="script">Dahiana Segovia</span>
+      </div>
+      <div class="divider" aria-hidden="true"><i class="fa-solid fa-ring"></i></div>
+    </div>
+  </section>
+
+  <!-- ============ CUENTA REGRESIVA ============ -->
+  <section class="countdown reveal">
+    <h2 class="section-title section-title--light">Faltan</h2>
+    <div class="countdown__grid" id="countdown">
+      <div class="countdown__item"><span data-unit="days">0</span><small>Días</small></div>
+      <div class="countdown__item"><span data-unit="hours">0</span><small>Hrs</small></div>
+      <div class="countdown__item"><span data-unit="minutes">0</span><small>Min</small></div>
+      <div class="countdown__item"><span data-unit="seconds">0</span><small>Seg</small></div>
+    </div>
+    <p class="countdown__caption">para nuestra boda</p>
+  </section>
+
+  <!-- ============ DÓNDE Y CUÁNDO ============ -->
+  <section class="where" id="eventos">
+    <h2 class="section-title reveal">Dónde y Cuándo</h2>
+    <div class="where__grid">
+      <article class="event-card reveal">
+        <div class="event-card__icon"><i class="fa-solid fa-church"></i></div>
+        <h3>Ceremonia Religiosa</h3>
+        <p class="event-card__place">Parroquia Nuestra Señora de los Milagros</p>
+        <p class="event-card__city">Caacupemí</p>
+        <p class="event-card__time">20:00 hs · 19 de diciembre de 2026</p>
+        <a class="btn btn--outline"
+           href="https://www.google.com/maps/search/?api=1&query=Parroquia+Nuestra+Se%C3%B1ora+de+los+Milagros+Caacupem%C3%AD"
+           target="_blank" rel="noopener">
+          <i class="fa-solid fa-location-dot"></i> Ver mapa
+        </a>
+      </article>
+
+      <article class="event-card reveal">
+        <div class="event-card__icon"><i class="fa-solid fa-champagne-glasses"></i></div>
+        <h3>Fiesta</h3>
+        <p class="event-card__place">La Quinta Marbella</p>
+        <p class="event-card__city">San Lorenzo</p>
+        <p class="event-card__time">21:00 hs · 19 de diciembre de 2026</p>
+        <a class="btn btn--outline"
+           href="https://www.google.com/maps/search/?api=1&query=La+Quinta+Marbella+San+Lorenzo"
+           target="_blank" rel="noopener">
+          <i class="fa-solid fa-location-dot"></i> Ver mapa
+        </a>
+      </article>
+    </div>
+  </section>
+
+  <!-- ============ ITINERARIO ============ -->
+  <section class="timeline-section reveal">
+    <h2 class="section-title">Te compartimos los detalles de la celebración</h2>
+    <ul class="timeline">
+      <li class="timeline__item">
+        <span class="timeline__time">20:00 hs</span>
+        <span class="timeline__dot"><i class="fa-solid fa-church"></i></span>
+        <span class="timeline__label">Ceremonia Religiosa</span>
+      </li>
+      <li class="timeline__item">
+        <span class="timeline__time">21:00 hs</span>
+        <span class="timeline__dot"><i class="fa-solid fa-champagne-glasses"></i></span>
+        <span class="timeline__label">Recepción</span>
+      </li>
+      <li class="timeline__item">
+        <span class="timeline__time">22:00 hs</span>
+        <span class="timeline__dot"><i class="fa-solid fa-utensils"></i></span>
+        <span class="timeline__label">Cena</span>
+      </li>
+      <li class="timeline__item">
+        <span class="timeline__time">23:30 hs</span>
+        <span class="timeline__dot"><i class="fa-solid fa-music"></i></span>
+        <span class="timeline__label">A bailar</span>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ============ CONFIRMACIÓN (RSVP) ============ -->
+  <section class="rsvp" id="rsvp">
+    <div class="rsvp__card reveal">
+      <h2 class="section-title">Confirma tu asistencia</h2>
+      <p class="rsvp__note">Cantidad de invitados: <strong>2 personas</strong></p>
+      <p class="rsvp__note">Favor de confirmar asistencia antes del 1 de diciembre de 2026.</p>
+
+      <form class="rsvp__form" id="rsvpForm" novalidate>
+        <div class="field">
+          <label for="nombre">Nombre</label>
+          <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" required />
+        </div>
+        <div class="field">
+          <label for="apellido">Apellido</label>
+          <input type="text" id="apellido" name="apellido" placeholder="Tu apellido" required />
+        </div>
+        <div class="field">
+          <label for="asistencia">¿Asistirás?</label>
+          <select id="asistencia" name="asistencia" required>
+            <option value="">Seleccionar…</option>
+            <option value="si">Sí, allí estaré</option>
+            <option value="no">No podré asistir</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="personas">Cantidad de personas</label>
+          <select id="personas" name="personas">
+            <option value="1">1 persona</option>
+            <option value="2" selected>2 personas</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn--solid">
+          <i class="fa-regular fa-paper-plane"></i> Confirmar
+        </button>
+        <p class="rsvp__feedback" id="rsvpFeedback" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ CÓDIGO DE VESTIMENTA ============ -->
+  <section class="dresscode reveal">
+    <div class="dresscode__icon"><i class="fa-solid fa-user-tie"></i></div>
+    <h2 class="section-title">Código de vestimenta</h2>
+    <p class="dresscode__value">Formal / Elegante</p>
+  </section>
+
+  <!-- ============ REGALOS ============ -->
+  <section class="gifts reveal" id="regalos">
+    <div class="gifts__icon"><i class="fa-solid fa-gift"></i></div>
+    <h2 class="section-title">Regalos</h2>
+    <p class="gifts__text">
+      El regalo es opcional, la asistencia obligatoria. Pero si querés tener un
+      detalle con nosotros, te dejamos nuestros datos.
+    </p>
+    <div class="gifts__box">
+      <p><strong>Titular:</strong> Santiago Ayala</p>
+      <p><strong>Banco / Billetera:</strong> —</p>
+      <p><strong>Cuenta / Alias:</strong> —</p>
+    </div>
+  </section>
+
+  <!-- ============ CIERRE ============ -->
+  <footer class="closing">
+    <div class="floral floral--footer" aria-hidden="true">&#10048;</div>
+    <p class="closing__thanks script">¡Gracias por acompañarnos!</p>
+    <p class="closing__names">Santiago &amp; Dahiana</p>
+    <p class="closing__hashtag">#SantiYDahi2026</p>
+    <p class="closing__copy">Con amor · 19 de diciembre de 2026</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

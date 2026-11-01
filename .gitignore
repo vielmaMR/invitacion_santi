@@ -1,0 +1,11 @@
+# Dependencias
+node_modules/
+
+# Datos de confirmaciones (no subir al repo)
+confirmaciones.xlsx
+confirmaciones.csv
+
+# Logs y temporales
+*.log
+.DS_Store
+Thumbs.db
