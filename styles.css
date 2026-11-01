@@ -23,7 +23,30 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+/* El desplazamiento entre páginas lo anima script.js (más lento y suave) */
+html { scroll-behavior: auto; overscroll-behavior: none; }
+
+body.is-locked { overflow: hidden; }
+
+/* Cada bloque principal ocupa una "página" completa */
+body > header,
+body > section,
+body > footer {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Elementos con ancho máximo centrados dentro de una página flex */
+.invite__card,
+.rsvp__card,
+.where__grid,
+.timeline,
+.gifts__box,
+.gifts__text,
+.phrase p { width: 100%; }
 
 body {
   font-family: var(--font-sans);
@@ -484,6 +507,78 @@ section {
   color: var(--ink);
 }
 
+.dresscode__note {
+  max-width: 520px;
+  margin: 1.4rem auto 1.6rem;
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 1.15rem;
+  color: var(--ink-soft);
+}
+.dresscode__grid {
+  display: flex;
+  justify-content: center;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.dress-card {
+  flex: 1 1 220px;
+  background: var(--white);
+  border: 1px solid rgba(176, 141, 78, 0.3);
+  border-radius: var(--radius);
+  padding: 1.6rem 1.2rem;
+  box-shadow: var(--shadow);
+}
+.dress-card__swatch {
+  display: block;
+  width: 64px; height: 64px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(74, 64, 54, 0.2);
+}
+.dress-card__swatch--white { background: #ffffff; border: 2px solid #d9d2c3; }
+.dress-card__swatch--navy  { background: #1c3d61; border: 2px solid #1c3d61; }
+/* Línea diagonal de "prohibido" sobre el color */
+.dress-card__swatch::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: -4px;
+  width: 3px; height: calc(100% + 8px);
+  background: #b0453e;
+  border-radius: 2px;
+  transform: translateX(-50%) rotate(45deg);
+}
+.dress-card__who {
+  font-family: var(--font-serif);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 1.15rem;
+  color: var(--gold-dark);
+}
+.dress-card__color {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  color: var(--ink);
+  margin: 0.3rem 0 0.8rem;
+}
+.dress-card__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b0453e;
+  border: 1px solid rgba(176, 69, 62, 0.4);
+  border-radius: 999px;
+  padding: 0.25rem 0.8rem;
+}
+
 /* ===================================================
    REGALOS
    =================================================== */
@@ -565,8 +660,247 @@ section {
 @media (prefers-reduced-motion: reduce) {
   .reveal { opacity: 1; transform: none; transition: none; }
   .hero__scroll i { animation: none; }
-  html { scroll-behavior: auto; }
+  .envelope__seal { animation: none; }
+  .envelope__hand { animation: none; }
 }
+
+/* ===================================================
+   INDICADOR DE PÁGINAS (puntos laterales)
+   =================================================== */
+.page-dots {
+  position: fixed;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.page-dots button {
+  width: 22px; height: 22px;
+  border: 0; background: transparent; cursor: pointer;
+  display: grid; place-items: center;
+}
+.page-dots button::after {
+  content: "";
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid var(--gold);
+  background: rgba(255, 255, 255, 0.6);
+  transition: all 0.3s ease;
+}
+.page-dots button.is-active::after {
+  background: var(--gold);
+  transform: scale(1.35);
+}
+body.is-locked .page-dots { display: none; }
+
+/* ===================================================
+   SOBRE DE INTRODUCCIÓN
+   =================================================== */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.8rem, 3vh, 1.6rem);
+  padding: 1.5rem;
+  background: #ffffff;
+  text-align: center;
+  overflow: hidden;
+  transition: opacity 0.9s ease, transform 0.9s ease;
+}
+.intro.is-leaving {
+  opacity: 0;
+  transform: scale(1.08);
+  pointer-events: none;
+}
+
+.intro__top {
+  font-family: var(--font-serif);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: clamp(0.85rem, 3.4vw, 1.1rem);
+  color: #4d6b82;
+}
+.intro__names {
+  font-family: var(--font-script);
+  font-size: clamp(2.4rem, 11vw, 3.6rem);
+  line-height: 1.1;
+  color: #5b7d96;
+}
+.intro__hint {
+  font-family: var(--font-serif);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: clamp(0.8rem, 3.2vw, 1rem);
+  color: #4d6b82;
+}
+
+.intro__stage {
+  position: relative;
+  width: min(86vw, 380px);
+  padding: 2.2rem 0;
+}
+
+/* Flores decorativas alrededor del sobre */
+.intro__flower { position: absolute; pointer-events: none; line-height: 1; }
+.intro__flower--1 { top: -6px;  left: -14px;  font-size: 3.2rem; color: #e9cdd3; transform: rotate(-12deg); }
+.intro__flower--2 { top: 4px;   right: -10px; font-size: 2.6rem; color: #efdca8; transform: rotate(14deg); }
+.intro__flower--3 { top: 30%;   left: -22px;  font-size: 2.4rem; color: #a9c1a1; transform: rotate(-30deg); }
+.intro__flower--4 { bottom: 6px; right: -16px; font-size: 3.4rem; color: #e9cdd3; transform: rotate(160deg); }
+.intro__flower--5 { bottom: 24%; right: -24px; font-size: 2.4rem; color: #a9c1a1; transform: rotate(40deg); }
+.intro__flower--6 { bottom: -4px; left: -8px;  font-size: 2.8rem; color: #efdca8; transform: rotate(-160deg); }
+
+/* ----- El sobre ----- */
+.envelope {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1.42 / 1;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  perspective: 1100px;
+  -webkit-tap-highlight-color: transparent;
+}
+.envelope > span { position: absolute; display: block; }
+
+.envelope__back {
+  inset: 0;
+  background: #1c3d61;
+  box-shadow: 0 14px 30px rgba(28, 61, 97, 0.28);
+}
+
+.envelope__letter {
+  left: 6%; right: 6%; top: 6%; bottom: 6%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  background: linear-gradient(180deg, #fffdf8, #f3ead9);
+  border: 1px solid rgba(176, 141, 78, 0.45);
+  transition: transform 1s ease 1s;
+}
+.envelope__letter-names {
+  font-family: var(--font-script);
+  font-size: clamp(1.4rem, 6vw, 2rem);
+  color: var(--gold);
+  line-height: 1.1;
+}
+.envelope__letter-date {
+  font-family: var(--font-serif);
+  letter-spacing: 0.25em;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+}
+
+/* Bolsillo frontal (todo menos el triángulo superior) */
+.envelope__front {
+  inset: 0;
+  z-index: 3;
+  background: #244a73;
+  clip-path: polygon(0 0, 50% 56%, 100% 0, 100% 100%, 0 100%);
+}
+.envelope__front::before,
+.envelope__front::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+/* Laterales más claros */
+.envelope__front::before {
+  background: #2a5582;
+  clip-path: polygon(0 0, 50% 56%, 0 100%);
+}
+/* Pliegue inferior más oscuro */
+.envelope__front::after {
+  background: #1f4167;
+  clip-path: polygon(0 100%, 50% 56%, 100% 100%);
+}
+
+/* Solapa */
+.envelope__flap {
+  left: 0; right: 0; top: 0;
+  height: 56%;
+  z-index: 4;
+  background: #2c5987;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform-origin: top center;
+  transition: transform 0.9s ease 0.15s, z-index 0s 0.6s;
+}
+
+/* Sello de cera */
+.envelope__seal {
+  left: 50%; top: 56%;
+  z-index: 5;
+  width: 21%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 35% 30%, #fbfcfd 0%, #c5ccd3 45%, #7f8a95 100%);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35), inset 0 0 0 3px rgba(255, 255, 255, 0.45);
+  animation: sealPulse 2s ease-in-out infinite;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.envelope__seal::before {
+  content: "";
+  position: absolute;
+  inset: 16%;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+.envelope__seal-text {
+  position: relative;
+  font-family: var(--font-script);
+  font-size: clamp(0.9rem, 4vw, 1.3rem);
+  color: #5f6a75;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+.envelope__hand {
+  position: absolute;
+  right: -34%;
+  bottom: -52%;
+  font-size: clamp(1.1rem, 4.4vw, 1.5rem);
+  color: #ffffff;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
+  animation: handTap 1.6s ease-in-out infinite;
+}
+
+@keyframes sealPulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50%      { transform: translate(-50%, -50%) scale(1.08); }
+}
+@keyframes handTap {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(-4px, -4px); }
+}
+
+/* ----- Estado: abierto ----- */
+.intro.is-open .envelope { cursor: default; pointer-events: none; }
+.intro.is-open .envelope__seal {
+  opacity: 0;
+  animation: none;
+  transform: translate(-50%, -50%) scale(1.35);
+}
+.intro.is-open .envelope__flap {
+  transform: rotateX(180deg);
+  z-index: 1;
+}
+.intro.is-open .envelope__letter {
+  transform: translateY(-58%);
+}
+.intro.is-open .intro__hint { opacity: 0; transition: opacity 0.4s ease; }
 
 /* ---------- Ajustes responsive timeline ---------- */
 @media (max-width: 520px) {

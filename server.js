@@ -33,15 +33,29 @@ const HEADERS = [
   "Nombre",
   "Apellido",
   "Asistencia",
-  "Cantidad de personas",
   "Mensaje",
 ];
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Servir el sitio estático desde la carpeta del proyecto
-app.use(express.static(__dirname));
+// Servir SOLO los archivos públicos del sitio. (No se expone toda la carpeta,
+// para que nadie pueda bajar confirmaciones.xlsx, server.js, etc.)
+const PUBLIC_FILES = ["index.html", "styles.css", "script.js"];
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
+PUBLIC_FILES.forEach((f) => {
+  app.get("/" + f, (req, res) => res.sendFile(path.join(__dirname, f)));
+});
+
+// Escapa texto antes de meterlo en HTML (evita inyección desde el formulario)
+function esc(v) {
+  return String(v)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 /* ---------- Utilidades de Excel / CSV ---------- */
 
@@ -54,6 +68,12 @@ function leerFilas() {
   const ws = wb.Sheets[SHEET_NAME] || wb.Sheets[wb.SheetNames[0]];
   const filas = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
   if (!filas.length) return [HEADERS.slice()];
+
+  // Migración: si el archivo viejo tiene la columna "Cantidad de personas", se quita.
+  const idx = filas[0].indexOf("Cantidad de personas");
+  if (idx !== -1) {
+    return filas.map((fila) => fila.filter((_, i) => i !== idx));
+  }
   return filas;
 }
 
@@ -65,7 +85,6 @@ function guardarFilas(filas) {
     { wch: 18 }, // Nombre
     { wch: 18 }, // Apellido
     { wch: 14 }, // Asistencia
-    { wch: 20 }, // Cantidad
     { wch: 40 }, // Mensaje
   ];
   const wb = XLSX.utils.book_new();
@@ -83,7 +102,6 @@ app.post("/api/confirmar", (req, res) => {
     const nombre = String(req.body.nombre || "").trim();
     const apellido = String(req.body.apellido || "").trim();
     const asistenciaRaw = String(req.body.asistencia || "").trim().toLowerCase();
-    const personas = String(req.body.personas || "").trim();
     const mensaje = String(req.body.mensaje || "").trim();
 
     if (!nombre || !apellido) {
@@ -108,7 +126,6 @@ app.post("/api/confirmar", (req, res) => {
       nombre,
       apellido,
       asistencia,
-      asistenciaRaw === "si" ? personas : "0",
       mensaje,
     ]);
     guardarFilas(filas);
@@ -140,22 +157,25 @@ app.get(`/${ADMIN_PATH}`, (req, res) => {
     `);
   }
 
-  const wb = XLSX.readFile(EXCEL_FILE);
-  const ws = wb.Sheets[SHEET_NAME] || wb.Sheets[wb.SheetNames[0]];
-  const filas = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+  const filas = leerFilas();
+  const datos = filas.slice(1);
 
-  const total = filas.length - 1;
-  const asisten = filas.slice(1).filter(f => f[3] === "Sí asiste").length;
-  const noAsisten = filas.slice(1).filter(f => f[3] === "No asiste").length;
-  const totalPersonas = filas.slice(1).reduce((acc, f) => acc + (parseInt(f[4]) || 0), 0);
+  const total = datos.length;
+  const asisten = datos.filter(f => f[3] === "Sí asiste").length;
+  const noAsisten = datos.filter(f => f[3] === "No asiste").length;
 
-  const filas_html = filas.map((fila, i) => {
-    const cells = fila.map(cell => i === 0
-      ? `<th style="background:#6b21a8;color:white;padding:8px 12px;text-align:left">${cell}</th>`
-      : `<td style="padding:8px 12px;border-bottom:1px solid #e5e7eb">${cell}</td>`
-    ).join("");
+  const encabezado = "<tr>" + filas[0].map(c => `<th>${esc(c)}</th>`).join("") + "</tr>";
+  const cuerpo = datos.map(fila => {
+    const cells = fila.map((cell, i) => {
+      if (i === 3) {
+        const clase = cell === "Sí asiste" ? "ok" : "no";
+        return `<td><span class="badge badge--${clase}">${esc(cell)}</span></td>`;
+      }
+      return `<td>${esc(cell)}</td>`;
+    }).join("");
     return `<tr>${cells}</tr>`;
   }).join("");
+  const filas_html = encabezado + cuerpo;
 
   res.send(`
     <!DOCTYPE html>
@@ -165,32 +185,49 @@ app.get(`/${ADMIN_PATH}`, (req, res) => {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Listado de invitados · Santiago & Dahiana</title>
       <style>
-        body { font-family: sans-serif; padding: 2rem; background: #faf5ff; color: #1f2937; }
-        h1 { color: #6b21a8; }
-        .stats { display: flex; gap: 1.5rem; margin: 1.5rem 0; flex-wrap: wrap; }
-        .stat { background: white; border-radius: 12px; padding: 1rem 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,.1); min-width: 140px; }
-        .stat .num { font-size: 2rem; font-weight: bold; color: #6b21a8; }
-        .stat .label { font-size: .85rem; color: #6b7280; }
-        table { border-collapse: collapse; width: 100%; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.1); }
-        tr:hover td { background: #f5f3ff; }
-        .dl { margin-top: 1.5rem; display: flex; gap: 1rem; }
-        .dl a { background: #6b21a8; color: white; padding: .6rem 1.2rem; border-radius: 8px; text-decoration: none; font-size: .9rem; }
-        .dl a:hover { background: #7c3aed; }
+        :root { --gold:#b08d4e; --gold-dark:#8c6d35; --cream:#f7f1e6; --ink:#4a4036; --ink-soft:#6b5f50; }
+        * { box-sizing: border-box; }
+        body { font-family: Georgia, "Times New Roman", serif; margin: 0; padding: 2rem 1.2rem; background: var(--cream); color: var(--ink); }
+        .wrap { max-width: 980px; margin: 0 auto; }
+        h1 { text-align: center; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; font-size: clamp(1.3rem, 4vw, 2rem); color: var(--gold-dark); margin: 0 0 .3rem; }
+        .sub { text-align: center; color: var(--ink-soft); font-style: italic; margin: 0 0 1.6rem; }
+        .stats { display: flex; gap: 1rem; margin: 0 0 1.6rem; flex-wrap: wrap; justify-content: center; }
+        .stat { flex: 1 1 150px; max-width: 220px; background: #fff; border: 1px solid rgba(176,141,78,.35); border-radius: 14px; padding: 1rem 1.2rem; text-align: center; box-shadow: 0 8px 22px rgba(74,64,54,.08); }
+        .stat .num { font-size: 2.2rem; font-weight: 600; color: var(--gold-dark); line-height: 1.1; }
+        .stat .label { font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-soft); }
+        .table-wrap { overflow-x: auto; background: #fff; border: 1px solid rgba(176,141,78,.35); border-radius: 14px; box-shadow: 0 8px 22px rgba(74,64,54,.08); }
+        table { border-collapse: collapse; width: 100%; font-family: system-ui, sans-serif; font-size: .92rem; }
+        th { background: var(--gold); color: #fff; text-align: left; padding: 10px 14px; font-weight: 600; white-space: nowrap; }
+        td { padding: 10px 14px; border-bottom: 1px solid #efe6d4; }
+        tr:last-child td { border-bottom: 0; }
+        tbody tr:hover td { background: #fbf7ef; }
+        .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .8rem; font-weight: 600; white-space: nowrap; }
+        .badge--ok { background: #e4efe0; color: #3f6b35; }
+        .badge--no { background: #f5e1de; color: #a1423a; }
+        .empty { text-align: center; padding: 1.6rem; color: var(--ink-soft); font-style: italic; }
+        .dl { margin-top: 1.5rem; display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap; }
+        .dl a { border: 1.5px solid var(--gold); color: var(--gold-dark); padding: .55rem 1.3rem; border-radius: 999px; text-decoration: none; font-family: system-ui, sans-serif; font-size: .88rem; font-weight: 600; }
+        .dl a:hover { background: var(--gold); color: #fff; }
       </style>
     </head>
     <body>
-      <h1>💌 Invitados · Santiago & Dahiana</h1>
+     <div class="wrap">
+      <h1>Invitados</h1>
+      <p class="sub">Santiago &amp; Dahiana · 19 de diciembre de 2026</p>
       <div class="stats">
-        <div class="stat"><div class="num">${total}</div><div class="label">Respuestas totales</div></div>
-        <div class="stat"><div class="num">${asisten}</div><div class="label">Confirman asistencia</div></div>
+        <div class="stat"><div class="num">${total}</div><div class="label">Respuestas</div></div>
+        <div class="stat"><div class="num">${asisten}</div><div class="label">Asisten</div></div>
         <div class="stat"><div class="num">${noAsisten}</div><div class="label">No asisten</div></div>
-        <div class="stat"><div class="num">${totalPersonas}</div><div class="label">Personas confirmadas</div></div>
       </div>
-      <table><tbody>${filas_html}</tbody></table>
+      <div class="table-wrap">
+        <table>${filas_html}</table>
+        ${total === 0 ? '<p class="empty">Todavía no hay confirmaciones.</p>' : ""}
+      </div>
       <div class="dl">
         <a href="/${ADMIN_PATH}/excel">⬇ Descargar Excel</a>
         <a href="/${ADMIN_PATH}/csv">⬇ Descargar CSV</a>
       </div>
+     </div>
     </body>
     </html>
   `);
@@ -212,11 +249,28 @@ app.get(`/${ADMIN_PATH}/csv`, (req, res) => {
   res.download(CSV_FILE, "confirmaciones.csv");
 });
 
-app.listen(PORT, () => {
+// Al iniciar, actualiza el archivo existente al formato nuevo (sin "Cantidad de personas")
+try {
+  if (fs.existsSync(EXCEL_FILE)) guardarFilas(leerFilas());
+} catch (err) {
+  console.error("No se pudo actualizar el formato del Excel:", err.message);
+}
+
+// Escucha en todas las interfaces (0.0.0.0) para poder entrar desde otros
+// dispositivos de la misma red (celular, tablet, otra PC).
+app.listen(PORT, "0.0.0.0", () => {
+  const redes = require("os").networkInterfaces();
+  const ips = [];
+  Object.keys(redes).forEach((n) =>
+    redes[n].forEach((i) => {
+      if (i.family === "IPv4" && !i.internal) ips.push(i.address);
+    })
+  );
   console.log("====================================================");
   console.log("  Invitación Santiago & Dahiana en marcha");
   console.log("  Abrí:    http://localhost:" + PORT);
+  ips.forEach((ip) => console.log("  En red:  http://" + ip + ":" + PORT));
   console.log("  Datos:   " + DATA_DIR);
-  console.log("  Listado: http://localhost:" + PORT + "/api/listado");
+  console.log("  Listado: http://localhost:" + PORT + "/" + ADMIN_PATH);
   console.log("====================================================");
 });

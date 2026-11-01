@@ -19,7 +19,38 @@
 
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body class="is-locked">
+
+  <!-- ============ SOBRE DE INTRODUCCIÓN ============ -->
+  <div class="intro" id="intro">
+    <p class="intro__top">Invitación a nuestra boda</p>
+    <p class="intro__names">Santiago &amp; Dahiana</p>
+
+    <div class="intro__stage">
+      <span class="intro__flower intro__flower--1" aria-hidden="true">&#10048;</span>
+      <span class="intro__flower intro__flower--2" aria-hidden="true">&#10047;</span>
+      <span class="intro__flower intro__flower--3" aria-hidden="true">&#10086;</span>
+      <span class="intro__flower intro__flower--4" aria-hidden="true">&#10048;</span>
+      <span class="intro__flower intro__flower--5" aria-hidden="true">&#10086;</span>
+      <span class="intro__flower intro__flower--6" aria-hidden="true">&#10047;</span>
+
+      <button class="envelope" id="envelope" type="button" aria-label="Abrir la invitación">
+        <span class="envelope__back"></span>
+        <span class="envelope__letter">
+          <span class="envelope__letter-names">Santiago &amp; Dahiana</span>
+          <span class="envelope__letter-date">19 · 12 · 2026</span>
+        </span>
+        <span class="envelope__front"></span>
+        <span class="envelope__flap"></span>
+        <span class="envelope__seal">
+          <span class="envelope__seal-text">S&amp;D</span>
+          <i class="fa-solid fa-hand-pointer envelope__hand" aria-hidden="true"></i>
+        </span>
+      </button>
+    </div>
+
+    <p class="intro__hint">Toca el sello para abrirla</p>
+  </div>
 
   <!-- ============ PORTADA / HERO ============ -->
   <header class="hero" id="inicio">
@@ -150,7 +181,7 @@
   <section class="rsvp" id="rsvp">
     <div class="rsvp__card reveal">
       <h2 class="section-title">Confirma tu asistencia</h2>
-      <p class="rsvp__note">Cantidad de invitados: <strong>2 personas</strong></p>
+    
       <p class="rsvp__note">Favor de confirmar asistencia antes del 1 de diciembre de 2026.</p>
 
       <form class="rsvp__form" id="rsvpForm" novalidate>
@@ -165,16 +196,8 @@
         <div class="field">
           <label for="asistencia">¿Asistirás?</label>
           <select id="asistencia" name="asistencia" required>
-            <option value="">Seleccionar…</option>
             <option value="si">Sí, allí estaré</option>
             <option value="no">No podré asistir</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="personas">Cantidad de personas</label>
-          <select id="personas" name="personas">
-            <option value="1">1 persona</option>
-            <option value="2" selected>2 personas</option>
           </select>
         </div>
         <button type="submit" class="btn btn--solid">
@@ -190,6 +213,24 @@
     <div class="dresscode__icon"><i class="fa-solid fa-user-tie"></i></div>
     <h2 class="section-title">Código de vestimenta</h2>
     <p class="dresscode__value">Formal / Elegante</p>
+
+    <p class="dresscode__note">Para que la fecha sea aún más especial, te pedimos evitar estos colores:</p>
+
+    <div class="dresscode__grid">
+      <article class="dress-card">
+        <span class="dress-card__swatch dress-card__swatch--white" aria-hidden="true"></span>
+        <h3 class="dress-card__who"><i class="fa-solid fa-person-dress"></i> Mujeres</h3>
+        <p class="dress-card__color">Color blanco</p>
+        <span class="dress-card__tag"><i class="fa-solid fa-ban"></i> Restringido</span>
+      </article>
+
+      <article class="dress-card">
+        <span class="dress-card__swatch dress-card__swatch--navy" aria-hidden="true"></span>
+        <h3 class="dress-card__who"><i class="fa-solid fa-person"></i> Hombres</h3>
+        <p class="dress-card__color">Azul marino</p>
+        <span class="dress-card__tag"><i class="fa-solid fa-ban"></i> Restringido</span>
+      </article>
+    </div>
   </section>
 
   <!-- ============ REGALOS ============ -->
@@ -201,9 +242,9 @@
       detalle con nosotros, te dejamos nuestros datos.
     </p>
     <div class="gifts__box">
-      <p><strong>Titular:</strong> Santiago Ayala</p>
-      <p><strong>Banco / Billetera:</strong> —</p>
-      <p><strong>Cuenta / Alias:</strong> —</p>
+      <p><strong>Titular:</strong> Dahiana Segovia</p>
+      <p><strong>Banco:</strong> Banco Familiar</p>
+      <p><strong>Alias - Telefono:</strong> 0991618730</p>
     </div>
   </section>
 
