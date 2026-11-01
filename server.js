@@ -2,7 +2,7 @@
    Servidor de la invitación · Santiago & Dahiana
    - Sirve los archivos estáticos (index.html, css, js)
    - Recibe confirmaciones de asistencia (POST /api/confirmar)
-   - Las guarda en un Excel acumulativo + respaldo CSV
+   - Las guarda en MongoDB (si hay MONGODB_URI) o en un Excel + CSV local
    =================================================== */
 
 const express = require("express");
@@ -77,8 +77,8 @@ function leerFilas() {
   return filas;
 }
 
-// Escribe el array de filas al archivo Excel y al respaldo CSV.
-function guardarFilas(filas) {
+// Arma la hoja de Excel a partir de un array de filas (con encabezado).
+function construirLibro(filas) {
   const ws = XLSX.utils.aoa_to_sheet(filas);
   ws["!cols"] = [
     { wch: 22 }, // Fecha
@@ -89,6 +89,12 @@ function guardarFilas(filas) {
   ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, SHEET_NAME);
+  return { wb, ws };
+}
+
+// Escribe el array de filas al archivo Excel y al respaldo CSV (modo archivo).
+function guardarFilas(filas) {
+  const { wb, ws } = construirLibro(filas);
   XLSX.writeFile(wb, EXCEL_FILE);
 
   // Respaldo CSV (más resistente y fácil de recuperar)
@@ -96,13 +102,56 @@ function guardarFilas(filas) {
   fs.writeFileSync(CSV_FILE, "\uFEFF" + csv, "utf8"); // BOM para acentos en Excel
 }
 
+/* ---------- Almacenamiento ----------
+   - Con MONGODB_URI: las confirmaciones se guardan en MongoDB (persisten
+     entre redeploys y reinicios en Render).
+   - Sin MONGODB_URI: se guardan en confirmaciones.xlsx/csv (solo para
+     desarrollo local; en Render ese disco se borra).                    */
+const MONGODB_URI = process.env.MONGODB_URI || "";
+let coleccion = null;
+
+async function iniciarAlmacenamiento() {
+  if (!MONGODB_URI) return;
+  const { MongoClient } = require("mongodb");
+  const client = new MongoClient(MONGODB_URI, { serverSelectionTimeoutMS: 15000 });
+  await client.connect();
+  coleccion = client
+    .db(process.env.MONGODB_DB || "invitacion")
+    .collection("confirmaciones");
+  await coleccion.createIndex({ creado: 1 });
+}
+
+// Guarda una confirmación y devuelve el total de respuestas.
+async function guardarConfirmacion(reg) {
+  if (coleccion) {
+    await coleccion.insertOne({ ...reg, creado: new Date() });
+    return coleccion.countDocuments();
+  }
+  const filas = leerFilas();
+  filas.push([reg.fecha, reg.nombre, reg.apellido, reg.asistencia, reg.mensaje]);
+  guardarFilas(filas);
+  return filas.length - 1;
+}
+
+// Devuelve todas las filas, con el encabezado en la primera posición.
+async function listarFilas() {
+  if (coleccion) {
+    const docs = await coleccion.find({}).sort({ creado: 1 }).toArray();
+    return [
+      HEADERS.slice(),
+      ...docs.map((d) => [d.fecha, d.nombre, d.apellido, d.asistencia, d.mensaje || ""]),
+    ];
+  }
+  return leerFilas();
+}
+
 /* ---------- Endpoint de confirmación ---------- */
-app.post("/api/confirmar", (req, res) => {
+app.post("/api/confirmar", async (req, res) => {
   try {
-    const nombre = String(req.body.nombre || "").trim();
-    const apellido = String(req.body.apellido || "").trim();
+    const nombre = String(req.body.nombre || "").trim().slice(0, 100);
+    const apellido = String(req.body.apellido || "").trim().slice(0, 100);
     const asistenciaRaw = String(req.body.asistencia || "").trim().toLowerCase();
-    const mensaje = String(req.body.mensaje || "").trim();
+    const mensaje = String(req.body.mensaje || "").trim().slice(0, 500);
 
     if (!nombre || !apellido) {
       return res
@@ -120,17 +169,13 @@ app.post("/api/confirmar", (req, res) => {
       timeZone: "America/Asuncion",
     });
 
-    const filas = leerFilas();
-    filas.push([
+    const totalConfirmados = await guardarConfirmacion({
       fecha,
       nombre,
       apellido,
       asistencia,
       mensaje,
-    ]);
-    guardarFilas(filas);
-
-    const totalConfirmados = filas.length - 1; // sin encabezado
+    });
     return res.json({
       ok: true,
       mensaje: "Confirmación registrada.",
@@ -147,17 +192,14 @@ app.post("/api/confirmar", (req, res) => {
 /* ---------- Ver listado de invitados (ruta secreta) ---------- */
 // Accedé con: https://tu-app.onrender.com/ADMIN_PATH
 // Ejemplo por defecto: /mis-invitados-santi
-app.get(`/${ADMIN_PATH}`, (req, res) => {
-  if (!fs.existsSync(EXCEL_FILE)) {
-    return res.status(200).send(`
-      <html><body style="font-family:sans-serif;padding:2rem">
-        <h2>Listado de confirmaciones</h2>
-        <p>Todavía no hay confirmaciones registradas.</p>
-      </body></html>
-    `);
+app.get(`/${ADMIN_PATH}`, async (req, res) => {
+  let filas;
+  try {
+    filas = await listarFilas();
+  } catch (err) {
+    console.error("Error al leer el listado:", err);
+    return res.status(500).send("No se pudo leer el listado.");
   }
-
-  const filas = leerFilas();
   const datos = filas.slice(1);
 
   const total = datos.length;
@@ -234,31 +276,45 @@ app.get(`/${ADMIN_PATH}`, (req, res) => {
 });
 
 /* ---------- Descargar Excel ---------- */
-app.get(`/${ADMIN_PATH}/excel`, (req, res) => {
-  if (!fs.existsSync(EXCEL_FILE)) {
-    return res.status(404).send("Todavía no hay confirmaciones.");
+app.get(`/${ADMIN_PATH}/excel`, async (req, res) => {
+  try {
+    const filas = await listarFilas();
+    if (filas.length < 2) return res.status(404).send("Todavía no hay confirmaciones.");
+    const { wb } = construirLibro(filas);
+    const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+    res.set({
+      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Disposition": 'attachment; filename="confirmaciones.xlsx"',
+    });
+    res.send(buf);
+  } catch (err) {
+    console.error("Error al generar el Excel:", err);
+    res.status(500).send("No se pudo generar el Excel.");
   }
-  res.download(EXCEL_FILE, "confirmaciones.xlsx");
 });
 
 /* ---------- Descargar CSV ---------- */
-app.get(`/${ADMIN_PATH}/csv`, (req, res) => {
-  if (!fs.existsSync(CSV_FILE)) {
-    return res.status(404).send("Todavía no hay confirmaciones.");
+app.get(`/${ADMIN_PATH}/csv`, async (req, res) => {
+  try {
+    const filas = await listarFilas();
+    if (filas.length < 2) return res.status(404).send("Todavía no hay confirmaciones.");
+    const { ws } = construirLibro(filas);
+    const csv = "\uFEFF" + XLSX.utils.sheet_to_csv(ws); // BOM para acentos en Excel
+    res.set({
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": 'attachment; filename="confirmaciones.csv"',
+    });
+    res.send(csv);
+  } catch (err) {
+    console.error("Error al generar el CSV:", err);
+    res.status(500).send("No se pudo generar el CSV.");
   }
-  res.download(CSV_FILE, "confirmaciones.csv");
 });
-
-// Al iniciar, actualiza el archivo existente al formato nuevo (sin "Cantidad de personas")
-try {
-  if (fs.existsSync(EXCEL_FILE)) guardarFilas(leerFilas());
-} catch (err) {
-  console.error("No se pudo actualizar el formato del Excel:", err.message);
-}
 
 // Escucha en todas las interfaces (0.0.0.0) para poder entrar desde otros
 // dispositivos de la misma red (celular, tablet, otra PC).
-app.listen(PORT, "0.0.0.0", () => {
+function iniciarServidor() {
+  app.listen(PORT, "0.0.0.0", () => {
   const redes = require("os").networkInterfaces();
   const ips = [];
   Object.keys(redes).forEach((n) =>
@@ -270,7 +326,25 @@ app.listen(PORT, "0.0.0.0", () => {
   console.log("  Invitación Santiago & Dahiana en marcha");
   console.log("  Abrí:    http://localhost:" + PORT);
   ips.forEach((ip) => console.log("  En red:  http://" + ip + ":" + PORT));
-  console.log("  Datos:   " + DATA_DIR);
+  console.log(
+    "  Datos:   " + (coleccion ? "MongoDB (persistente)" : "archivo local " + DATA_DIR)
+  );
   console.log("  Listado: http://localhost:" + PORT + "/" + ADMIN_PATH);
   console.log("====================================================");
-});
+  });
+}
+
+// Arranque: conecta el almacenamiento y luego levanta el servidor.
+// Si MONGODB_URI está definida y falla la conexión, se corta con error
+// (mejor eso que guardar en un disco que Render borra sin avisar).
+(async () => {
+  try {
+    await iniciarAlmacenamiento();
+    // Modo archivo: actualiza el Excel existente al formato actual
+    if (!coleccion && fs.existsSync(EXCEL_FILE)) guardarFilas(leerFilas());
+  } catch (err) {
+    console.error("No se pudo iniciar el almacenamiento:", err.message);
+    process.exit(1);
+  }
+  iniciarServidor();
+})();

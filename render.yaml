@@ -8,17 +8,11 @@ services:
     buildCommand: npm install
     startCommand: npm start
     envVars:
-      # Carpeta de datos en el disco persistente (ver 'disk' más abajo)
-      - key: DATA_DIR
-        value: /var/data
+      # Cadena de conexión de MongoDB Atlas. Las confirmaciones se guardan ahí
+      # y NO se pierden al redesplegar. Se carga a mano en el panel de Render.
+      - key: MONGODB_URI
+        sync: false
       # Ruta secreta para ver el listado de invitados.
       # La URL será: https://tu-app.onrender.com/TU_RUTA_SECRETA
       - key: ADMIN_PATH
         value: mis-invitados-santi
-    # Disco persistente para que el Excel/CSV no se borre al reiniciar.
-    # NOTA: el disco persistente NO está disponible en el plan free de Render.
-    # Si usás el plan free, comentá el bloque 'disk' y descargá el listado seguido.
-    disk:
-      name: datos
-      mountPath: /var/data
-      sizeGB: 1
